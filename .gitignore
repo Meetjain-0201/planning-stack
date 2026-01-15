@@ -1,0 +1,24 @@
+# Build artifacts
+build/
+install/
+log/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# ROS
+*.bag
+*.db3
+
+# Backup files
+*~
+*.bak
