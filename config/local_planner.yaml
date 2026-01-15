@@ -1,0 +1,40 @@
+local_planner:
+  ros__parameters:
+    # Control frequency
+    controller_frequency: 10.0       # Hz
+    
+    # Robot kinematics (match your robot's capabilities)
+    max_vel_x: 0.5                   # m/s
+    min_vel_x: 0.0                   # m/s (set to negative to allow backing up)
+    max_vel_theta: 1.0               # rad/s
+    min_vel_theta: -1.0              # rad/s
+    
+    # Acceleration limits
+    acc_lim_x: 0.5                   # m/s²
+    acc_lim_theta: 1.0               # rad/s²
+    decel_lim_x: -0.5                # m/s² (negative = deceleration)
+    decel_lim_theta: -1.0            # rad/s²
+    
+    # DWA simulation
+    sim_time: 2.0                    # seconds - forward simulation
+    sim_granularity: 0.05            # seconds - time step
+    
+    # Velocity sampling
+    vx_samples: 10                   # Number of x velocity samples
+    vtheta_samples: 20               # Number of angular velocity samples
+    
+    # Cost function weights
+    path_distance_bias: 32.0         # Weight for path following
+    goal_distance_bias: 20.0         # Weight for goal heading
+    occdist_scale: 0.02              # Weight for obstacle clearance
+    
+    # Obstacle avoidance
+    obstacle_distance_threshold: 0.3 # meters - min clearance
+    
+    # Goal tolerance
+    xy_goal_tolerance: 0.15          # meters
+    yaw_goal_tolerance: 0.2          # radians (~11 degrees)
+    
+    # Visualization
+    publish_local_plan: true
+    publish_trajectories: true       # Show all sampled trajectories

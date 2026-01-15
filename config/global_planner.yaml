@@ -1,0 +1,34 @@
+global_planner:
+  ros__parameters:
+    # Update rates
+    planning_frequency: 1.0          # Hz - replan rate
+    
+    # Grid parameters
+    inflation_radius: 0.4            # meters (robot radius + safety margin)
+    cost_scaling_factor: 10.0        # How fast cost increases near obstacles
+    lethal_cost: 253                 # Occupancy grid values >= this are obstacles
+    
+    # A* algorithm
+    allow_diagonal: true             # 8-connected search
+    diagonal_cost: 1.414             # sqrt(2)
+    straight_cost: 1.0
+    
+    # Heuristic
+    heuristic_type: "euclidean"      # Options: euclidean, manhattan, octile
+    heuristic_weight: 1.0            # Weight (1.0 = optimal A*, >1 = greedy)
+    
+    # Path smoothing
+    smooth_path: true
+    smoothing_iterations: 100
+    smoothing_tolerance: 0.1         # meters
+    
+    # Timeouts
+    max_planning_time: 5.0           # seconds
+    
+    # Replanning
+    replan_on_new_map: true
+    replan_distance_threshold: 0.5   # meters - replan if deviated
+    
+    # Visualization
+    publish_plan_markers: true
+    publish_expanded_nodes: false    # Debug: show all explored nodes
