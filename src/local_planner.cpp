@@ -63,9 +63,11 @@ LocalPlanner::LocalPlanner()
     "/odom/filtered", 10,
     std::bind(&LocalPlanner::odomCallback, this, std::placeholders::_1)
   );
-  
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(10));
+  qos.reliability(rclcpp::ReliabilityPolicy::BestEffort);
+
   scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-    "/scan", 10,
+    "/scan", qos,
     std::bind(&LocalPlanner::scanCallback, this, std::placeholders::_1)
   );
   
@@ -101,7 +103,7 @@ void LocalPlanner::pathCallback(const nav_msgs::msg::Path::SharedPtr msg)
 
 void LocalPlanner::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-  current_odom_ = *msg;
+  current_odom_.twist = msg->twist;
   has_odom_ = true;
 }
 
@@ -113,12 +115,37 @@ void LocalPlanner::scanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg
 
 void LocalPlanner::controlTimerCallback()
 {
-  if (!has_path_ || !has_odom_ || !has_scan_) {
+  if (!has_path_ || !has_scan_) {
     // Stop robot
     geometry_msgs::msg::Twist stop_cmd;
     cmd_vel_pub_->publish(stop_cmd);
     return;
   }
+  
+  // Get current robot pose using TF
+  geometry_msgs::msg::TransformStamped transform;
+  try {
+    transform = tf_buffer_->lookupTransform(
+      "map", "base_footprint", tf2::TimePointZero
+    );
+  } catch (tf2::TransformException& ex) {
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+      "Could not get transform: %s", ex.what());
+    geometry_msgs::msg::Twist stop_cmd;
+    cmd_vel_pub_->publish(stop_cmd);
+    return;
+  }
+  
+  // Update current odometry from TF
+  current_odom_.header.frame_id = "map";
+  current_odom_.header.stamp = this->now();
+  current_odom_.pose.pose.position.x = transform.transform.translation.x;
+  current_odom_.pose.pose.position.y = transform.transform.translation.y;
+  current_odom_.pose.pose.position.z = transform.transform.translation.z;
+  current_odom_.pose.pose.orientation = transform.transform.rotation;
+  
+  // Get velocity from odometry topic (keep this subscription for velocity)
+  // current_odom_.twist is already populated by odomCallback
   
   // Check if goal reached
   if (isGoalReached()) {

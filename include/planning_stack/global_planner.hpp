@@ -50,7 +50,6 @@ private:
   
   // Subscriptions
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
   
   // Publishers
@@ -67,7 +66,6 @@ private:
   // State
   nav_msgs::msg::OccupancyGrid::SharedPtr map_;
   std::vector<int8_t> inflated_map_;
-  geometry_msgs::msg::PoseStamped current_pose_;
   geometry_msgs::msg::PoseStamped goal_;
   bool has_map_;
   bool has_goal_;

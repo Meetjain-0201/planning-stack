@@ -42,11 +42,6 @@ GlobalPlanner::GlobalPlanner()
     std::bind(&GlobalPlanner::mapCallback, this, std::placeholders::_1)
   );
   
-  odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
-    "/odom/filtered", 10,
-    std::bind(&GlobalPlanner::odomCallback, this, std::placeholders::_1)
-  );
-  
   goal_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
     "/goal", 10,
     std::bind(&GlobalPlanner::goalCallback, this, std::placeholders::_1)
@@ -85,11 +80,6 @@ void GlobalPlanner::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr ms
   );
 }
 
-void GlobalPlanner::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
-{
-  current_pose_.header = msg->header;
-  current_pose_.pose = msg->pose.pose;
-}
 
 void GlobalPlanner::goalCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
 {
@@ -111,8 +101,30 @@ void GlobalPlanner::planningTimerCallback()
     return;
   }
   
+  // Get current robot position using TF
+  geometry_msgs::msg::TransformStamped transform;
+  try {
+    transform = tf_buffer_->lookupTransform(
+      "map", "base_footprint", tf2::TimePointZero
+    );
+  } catch (tf2::TransformException& ex) {
+    RCLCPP_WARN(this->get_logger(), "Could not get transform: %s", ex.what());
+    return;
+  }
+  
+  // Extract position from transform
+  geometry_msgs::msg::Point start;
+  start.x = transform.transform.translation.x;
+  start.y = transform.transform.translation.y;
+  start.z = 0.0;
+  
+  RCLCPP_INFO(this->get_logger(), 
+    "Robot at (%.2f, %.2f), planning to goal (%.2f, %.2f)",
+    start.x, start.y, goal_.pose.position.x, goal_.pose.position.y
+  );
+  
   // Plan path
-  auto path = planPath(current_pose_.pose.position, goal_.pose.position);
+  auto path = planPath(start, goal_.pose.position);
   
   if (path.poses.empty()) {
     RCLCPP_WARN(this->get_logger(), "No path found!");
